@@ -51,7 +51,9 @@ android {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
             // Screenshot tests only run when asked: ./gradlew testDebugUnitTest -Pscreenshots=true
-            it.systemProperty("screenshots", (project.findProperty("screenshots") ?: "false").toString())
+            val shots = (project.findProperty("screenshots") ?: "false").toString()
+            it.systemProperty("screenshots", shots)
+            if (shots != "true") it.exclude("**/ScreenshotTest*")
             it.systemProperty("roborazzi.test.record", "true")
             it.maxHeapSize = "2g"
         }
