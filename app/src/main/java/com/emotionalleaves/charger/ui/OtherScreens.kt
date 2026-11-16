@@ -78,6 +78,9 @@ fun AboutScreen(vm: CaseViewModel, onBack: () -> Unit) {
                 LinkRow(Link("Find a lawyer (limited help is available)", Court.FIND_LAWYER))
             }
             Section("Sources") { Guide.sources.forEach { LinkRow(it) } }
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val version = remember { runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull() ?: "" }
+            Section("Version") { Paragraph("Charger $version. New builds install over this one and keep your answers.") }
             Section("Start over") {
                 OutlinedButton(onClick = { confirm = true }, colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
                     Text("Erase all my answers")
