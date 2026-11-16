@@ -143,13 +143,13 @@ object FormFields {
                 "Text8" to c.currentName,
                 "Text10" to c.newspaper.trim(),
                 "Text11" to (Dates.parse(c.pub1Date)?.let { Dates.long(it) } ?: ""),
-                "datenamechange.0" to (Dates.parse(c.filedDate)?.let { Dates.long(it) } ?: ""),
+                "numberonenamechangeadult" to "1.  On ${Dates.parse(c.filedDate)?.let { Dates.long(it) } ?: "_____________________________"}, I filed a Petition for a Name Change (Adult).  As instructed in Neb. Rev. Stat. § 25-21, 271, Notice of this filing was published in a newspaper published in the county the petition was filed in, or in a newspaper in general circulation in the county.",
                 "Text12" to (Dates.parse(c.mailedDate)?.let { Dates.long(it) } ?: ""),
             ) + contactBlock(c),
             // Choice4 = "Name change for an Adult" on this multi-purpose form.
             radios = mapOf("Group27" to "Choice4"),
-            show = listOf("namechangeadult", "numberonenamechangeadult", "datenamechange.0"),
-            hide = listOf("adultnamechange", "plaintiffdefendant", "plaintiff", "defendant", "numberonedivorce", "datedivorce.0"),
+            show = listOf("namechangeadult", "numberonenamechangeadult"),
+            hide = listOf("adultnamechange", "datenamechange.0", "plaintiffdefendant", "plaintiff", "defendant", "numberonedivorce", "datedivorce.0"),
         )
     }
 
