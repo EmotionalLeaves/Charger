@@ -94,9 +94,7 @@ object Guide {
             "Write down the date, time, judge, courtroom and building address.",
         )
         StepId.PUBLISH -> listOf(
-            "Your Legal Notice must be printed once a week, 2 weeks in a row, in a newspaper sold in your county. Both runs must finish before your hearing.",
-            "Create the notice below, then send it to the newspaper and ask them to file their Affidavit of Publication with the court.",
-            "Not sure which paper? The Nebraska Press Association keeps a list and will help (${Court.NEWSPAPERS_PHONE}).",
+            "Your notice runs in a newspaper sold in your county, once a week for 2 weeks in a row, and both runs finish before your hearing. The newspaper then sends the court its proof.",
         )
         StepId.PREPARE -> listOf(
             "Do these at least 2 days before your hearing.",

@@ -66,6 +66,17 @@ fun StepScreen(step: StepId, c: CaseData, vm: CaseViewModel, onBack: () -> Unit,
         },
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().verticalScroll(scroll).padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+            // Where you are: one segment per step.
+            Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                steps.forEachIndexed { i, s ->
+                    val color = when {
+                        i == index -> MaterialTheme.colorScheme.primary
+                        s.name in c.done -> MaterialTheme.colorScheme.secondary
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+                    Surface(color = color, shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f).height(4.dp)) {}
+                }
+            }
             Text(step.title, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(10.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) { Guide.intro(step, c).forEach { Paragraph(it) } }

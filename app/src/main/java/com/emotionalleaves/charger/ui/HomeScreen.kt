@@ -106,7 +106,8 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
                     Column(Modifier.padding(vertical = 4.dp)) {
                         upcoming.forEachIndexed { i, item ->
                             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Row(Modifier.clickable { addToCalendar(ctx, item.title, item.date, if (item.title == "Your hearing") Dates.parseTime(c.hearingTime) else null, if (item.title == "Your hearing") c.courthouseAddress else null, item.detail) }
+                            Row(Modifier.clickable { val isHearing = item.kind == Deadlines.Kind.HEARING
+                                addToCalendar(ctx, if (isHearing) "Name change hearing" else item.title, item.date, if (isHearing) Dates.parseTime(c.hearingTime) else null, if (isHearing) c.courthouseAddress else null, item.detail) }
                                 .padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.width(64.dp)) {
                                     Text(item.date.month.name.take(3), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)

@@ -17,7 +17,8 @@ object Deadlines {
     const val MAIL_WITHIN_DAYS = 5L
     const val AFFIDAVIT_WITHIN_DAYS = 10L
 
-    data class Item(val date: LocalDate, val title: String, val detail: String, val done: Boolean = false)
+    enum class Kind { HEARING_TARGET, PUBLISH_BY, PUBLISH_RUN, MAIL_BY, AFFIDAVIT_BY, CALL_CLERK, HEARING }
+    data class Item(val date: LocalDate, val title: String, val detail: String, val done: Boolean = false, val kind: Kind)
 
     enum class Level { OK, WARN, PROBLEM }
     data class Check(val level: Level, val message: String)
@@ -74,22 +75,22 @@ object Deadlines {
         val mailed = Dates.parse(c.mailedDate)
 
         if (filed != null && hearing == null) {
-            out += Item(earliestHearing(filed), "Earliest suggested hearing", "About 6 weeks after filing.")
+            out += Item(earliestHearing(filed), "Earliest suggested hearing", "About 6 weeks after filing.", kind = Kind.HEARING_TARGET)
         }
         if (hearing != null && !c.publicationSkipped) {
-            if (p1 == null) out += Item(latestFirstRun(hearing), "Notice should be in the paper by now", "First of 2 weekly runs. Earlier is better.")
-            else out += Item(p1, "Notice runs (week 1)", c.newspaper.ifBlank { "Newspaper" }, done = !p1.isAfter(LocalDate.now()))
-            if (p2 != null) out += Item(p2, "Notice runs (week 2)", c.newspaper.ifBlank { "Newspaper" }, done = !p2.isAfter(LocalDate.now()))
+            if (p1 == null) out += Item(latestFirstRun(hearing), "Last good day for the 1st newspaper run", "2 weekly runs must finish before the hearing. Earlier is better.", kind = Kind.PUBLISH_BY)
+            else out += Item(p1, "Notice runs (week 1)", c.newspaper.ifBlank { "Newspaper" }, done = !p1.isAfter(LocalDate.now()), kind = Kind.PUBLISH_RUN)
+            if (p2 != null) out += Item(p2, "Notice runs (week 2)", c.newspaper.ifBlank { "Newspaper" }, done = !p2.isAfter(LocalDate.now()), kind = Kind.PUBLISH_RUN)
         }
         if (p1 != null && c.hasInterestedParties == true) {
-            out += Item(mailBy(p1), "Mail notice to interested parties", "Within 5 days of the first run.", done = mailed != null)
+            out += Item(mailBy(p1), "Mail notice to interested parties", "Within 5 days of the first run.", done = mailed != null, kind = Kind.MAIL_BY)
             if (mailed != null) {
-                out += Item(affidavitBy(mailed, hearing), "File Affidavit of Mailing (notarized)", "Within 10 days of mailing, before the hearing.", done = c.mailingAffidavitFiledDate.isNotBlank())
+                out += Item(affidavitBy(mailed, hearing), "File Affidavit of Mailing (notarized)", "Within 10 days of mailing, before the hearing.", done = c.mailingAffidavitFiledDate.isNotBlank(), kind = Kind.AFFIDAVIT_BY)
             }
         }
         if (hearing != null) {
-            if (!c.publicationSkipped) out += Item(hearing.minusDays(2), "Call the clerk", "Confirm the newspaper's Affidavit of Publication is filed.", done = "confirm_affidavit" in c.checked)
-            out += Item(hearing, "Your hearing", listOf(c.hearingTime.let { Dates.parseTime(it)?.let(Dates::time) ?: "" }, c.courtroom.let { if (it.isBlank()) "" else "Courtroom $it" }).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "District Court" }, done = c.decreeDate.isNotBlank())
+            if (!c.publicationSkipped) out += Item(hearing.minusDays(2), "Call the clerk", "Confirm the newspaper's Affidavit of Publication is filed.", done = "confirm_affidavit" in c.checked, kind = Kind.CALL_CLERK)
+            out += Item(hearing, "Your hearing", listOf(c.hearingTime.let { Dates.parseTime(it)?.let(Dates::time) ?: "" }, c.courtroom.let { if (it.isBlank()) "" else "Courtroom $it" }).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "District Court" }, done = c.decreeDate.isNotBlank(), kind = Kind.HEARING)
         }
         return out.sortedBy { it.date }
     }
