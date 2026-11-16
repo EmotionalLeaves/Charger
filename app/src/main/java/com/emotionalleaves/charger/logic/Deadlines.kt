@@ -88,7 +88,7 @@ object Deadlines {
             }
         }
         if (hearing != null) {
-            out += Item(hearing.minusDays(2), "Call the clerk", "Confirm the newspaper's Affidavit of Publication is filed.", done = "confirm_affidavit" in c.checked)
+            if (!c.publicationSkipped) out += Item(hearing.minusDays(2), "Call the clerk", "Confirm the newspaper's Affidavit of Publication is filed.", done = "confirm_affidavit" in c.checked)
             out += Item(hearing, "Your hearing", listOf(c.hearingTime.let { Dates.parseTime(it)?.let(Dates::time) ?: "" }, c.courtroom.let { if (it.isBlank()) "" else "Courtroom $it" }).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "District Court" }, done = c.decreeDate.isNotBlank())
         }
         return out.sortedBy { it.date }

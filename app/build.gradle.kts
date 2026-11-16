@@ -46,8 +46,16 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
-    androidResources { noCompress += "pdf" }
-    testOptions { unitTests.isReturnDefaultValues = true }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Screenshot tests only run when asked: ./gradlew testDebugUnitTest -Pscreenshots=true
+            it.systemProperty("screenshots", (project.findProperty("screenshots") ?: "false").toString())
+            it.systemProperty("roborazzi.test.record", "true")
+            it.maxHeapSize = "2g"
+        }
+    }
 }
 
 dependencies {
@@ -65,4 +73,9 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.apache.pdfbox:pdfbox:2.0.32")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.36.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.36.0")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

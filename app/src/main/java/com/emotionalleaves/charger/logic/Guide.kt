@@ -25,11 +25,7 @@ object Guide {
 
     /** Whether a step's required answers are filled in. Used to enable "Mark done". */
     fun missing(step: StepId, c: CaseData): List<String> = when (step) {
-        StepId.ELIGIBLE -> buildList {
-            if (c.isAdult != true) add("You must be an adult under Nebraska law")
-            if (c.livedOneYear != true) add("You must have lived in the county for 1 year")
-            if (c.honestReason != true) add("Your reason must be an honest one")
-        }
+        StepId.ELIGIBLE -> if (c.isAdult == true && c.livedOneYear == true && c.honestReason == true) emptyList() else listOf("Yes to all three questions")
         StepId.DETAILS -> buildList {
             if (c.curFirst.isBlank() || c.curLast.isBlank()) add("Current first and last name")
             if (c.newFirst.isBlank() || c.newLast.isBlank()) add("New first and last name")
@@ -41,15 +37,13 @@ object Guide {
             if (c.reason.isBlank()) add("Your reason")
         }
         StepId.MONEY -> if (c.askFeeWaiver == null) listOf("Choose how you'll pay the filing fee") else emptyList()
-        StepId.SAFETY -> buildList {
-            if (c.needsSafetyWaiver == null) add("Answer the safety question")
-            if (c.needsSafetyWaiver == true && c.waiverResult.isBlank()) add("Enter the judge's decision once you hear back")
-        }
+        StepId.SAFETY -> if (c.needsSafetyWaiver == null) listOf("Answer the safety question") else emptyList()
         StepId.FILE -> buildList {
             if (Dates.parse(c.filedDate) == null) add("The date you filed")
             if (c.caseNumber.isBlank()) add("Your case number")
         }
         StepId.HEARING -> buildList {
+            if (c.waiverPending) add("The judge's decision on skipping the newspaper")
             if (Dates.parse(c.hearingDate) == null) add("Hearing date")
             if (Dates.parseTime(c.hearingTime) == null) add("Hearing time")
         }
@@ -62,7 +56,7 @@ object Guide {
         }
         StepId.PREPARE -> prepareChecklist(c).filter { it.id !in c.checked }.map { it.text }
         StepId.HEARING_DAY -> if (Dates.parse(c.decreeDate) == null) listOf("The date the judge signed your decree") else emptyList()
-        StepId.COPIES -> if ("got_copies" !in c.checked) listOf("Pick up your certified copies") else emptyList()
+        StepId.COPIES -> emptyList()
         StepId.UPDATE -> emptyList()
     }
 
@@ -85,21 +79,16 @@ object Guide {
             "Your current name is your legal name as it is now. Leave middle blank if you don't have one.",
         )
         StepId.MONEY -> listOf(
-            "Filing fee: about ${Court.FILING_FEE}. ${Court.FILING_FEE_NOTE}",
-            "Newspaper notice: the newspaper sets its own price. Call and ask before you file.",
-            "Certified copies after your hearing: a few dollars each.",
-            "If you can't afford the court costs, you can ask the judge to waive them (called \"in forma pauperis\").",
+            "Three costs: the court filing fee (about ${Court.FILING_FEE}), the newspaper notice (the paper sets its price), and certified copies at the end (a few dollars each).",
+            "If you can't afford the court costs, you can ask the judge to waive them.",
         )
         StepId.SAFETY -> listOf(
             "Normally your name change is printed in a newspaper so the public is notified.",
             "If printing it would put you in danger, you can ask the judge to skip it. You'll need proof, like a protection order or police reports. Most people don't qualify.",
         )
-        StepId.FILE -> buildList {
-            add("Create your two filing forms below, print them, and sign the petition.")
-            add("Then take them, with the fee or your fee-waiver forms, to the clerk of the district court. You can also mail them (no cash by mail; check or money order payable to \"Clerk of the District Court\").")
-            add("The clerk gives you a case number. Every later form needs it.")
-            add("The clerk can't give legal advice, but can tell you local rules.")
-        }
+        StepId.FILE -> listOf(
+            "Print two forms, sign the petition, and hand them to the clerk of the district court with the fee. The clerk gives you a case number.",
+        )
         StepId.HEARING -> listOf(
             "Ask the clerk who schedules name change hearings (often the judge's bailiff), then call them.",
             if (c.publicationSkipped) "Your newspaper notice was waived, so ask for the next available hearing."
@@ -120,9 +109,8 @@ object Guide {
             "It usually takes under 10 minutes. You can bring people for support.",
         )
         StepId.COPIES -> listOf(
-            "After the judge signs, get certified copies of your Decree from the clerk of the district court.",
-            "Agencies like Social Security and the DMV only accept certified copies, not photocopies.",
-            "Get one for each place that might keep it. ${recommendedCopies(c)} is a good number for most people.",
+            "Ask the clerk of the district court for certified copies of your signed Decree. Social Security, the DMV and others only accept certified copies, not photocopies.",
+            "Get ${recommendedCopies(c)} or more: some offices keep the copy you give them.",
         )
         StepId.UPDATE -> listOf(
             "Do Social Security first. Most other places check against it.",
@@ -131,6 +119,20 @@ object Guide {
     }
 
     fun recommendedCopies(c: CaseData) = 3
+
+    /** Short "at a glance" facts for someone just starting. */
+    val glance = listOf(
+        "Time" to "Usually 6 to 10 weeks from filing to your hearing",
+        "Cost" to "About ${Court.FILING_FEE} to the court, plus the newspaper. Fee waivers exist.",
+        "Where" to "The district court in the county you've lived in for a year",
+        "You'll need" to "A printer (or print shop), and one short court hearing",
+    )
+
+    fun stillNeeded(missing: List<String>): String? = when (missing.size) {
+        0 -> null
+        1 -> "Still needed: ${missing[0]}"
+        else -> "Still needed: ${missing[0]}, and ${missing.size - 1} more"
+    }
 
     fun prepareChecklist(c: CaseData): List<ChecklistItem> = buildList {
         add(ChecklistItem("make_decree", "Create and print 2 copies of the Decree of Name Change (below)"))

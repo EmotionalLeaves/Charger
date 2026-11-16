@@ -44,13 +44,12 @@ fun StepScreen(step: StepId, c: CaseData, vm: CaseViewModel, onBack: () -> Unit,
                 Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
                     if (isDone) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedButton(onClick = { vm.setDone(step.name, false) }, modifier = Modifier.heightIn(min = 52.dp)) { Text("Undo") }
+                            OutlinedButton(onClick = { vm.setDone(step.name, false) }, modifier = Modifier.heightIn(min = 52.dp)) { Text("Not done") }
                             Button(onClick = { onNext(Guide.nextStep(c)) }, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) { Text("Next step") }
                         }
                     } else {
-                        if (missing.isNotEmpty()) {
-                            Text("Still needed: " + missing.joinToString(", ").lowercase().replaceFirstChar { it.uppercase() },
-                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Guide.stillNeeded(missing)?.let {
+                            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 8.dp), maxLines = 2)
                         }
                         Button(
@@ -180,18 +179,22 @@ private fun Safety(c: CaseData, vm: CaseViewModel) {
             FormCard(CourtForm.WAIVER, c, note = "Your name, contact details and case type are filled in. Write your reasons and list your proof by hand.")
             LinkRow(Link("Waiver guide (Appendix A) in the court packet", Court.FORMS_PAGE))
         }
-        Section("The judge's decision") {
-            Paragraph("The clerk tells you in writing (or by email). Come back and enter it.")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Choice("Granted", c.waiverResult == "granted", Modifier.weight(1f)) { vm.update { it.copy(waiverResult = "granted") } }
-                Choice("Denied", c.waiverResult == "denied", Modifier.weight(1f)) { vm.update { it.copy(waiverResult = "denied") } }
-                Choice("Waiting", c.waiverResult.isBlank(), Modifier.weight(1f)) { vm.update { it.copy(waiverResult = "") } }
-            }
-            when (c.waiverResult) {
-                "granted" -> Note("You can skip the newspaper step.", Tone.GOOD)
-                "denied" -> Note("You'll need to publish the notice (step 7).", Tone.WARN)
-                else -> Note("You can keep going. File your petition (next step) and come back here when you hear.")
-            }
+        WaiverDecision(c, vm)
+    }
+}
+
+@Composable
+private fun WaiverDecision(c: CaseData, vm: CaseViewModel) {
+    Section("The judge's decision on skipping the newspaper") {
+        Paragraph("The clerk tells you in writing (or by email). Enter it here when you hear.")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Choice("Granted", c.waiverResult == "granted", Modifier.weight(1f)) { vm.update { it.copy(waiverResult = "granted") } }
+            Choice("Denied", c.waiverResult == "denied", Modifier.weight(1f)) { vm.update { it.copy(waiverResult = "denied") } }
+        }
+        when (c.waiverResult) {
+            "granted" -> Note("You can skip the newspaper step.", Tone.GOOD)
+            "denied" -> Note("You'll need to publish the notice in the newspaper.", Tone.WARN)
+            else -> Note("Still waiting? Keep going: file your petition. You'll be asked again before setting your hearing.")
         }
     }
 }
@@ -215,6 +218,7 @@ private fun FileStep(c: CaseData, vm: CaseViewModel) {
             add("Photo ID")
         }
         Note("Bring: " + bring.joinToString(" · "))
+        Note("Mailing instead? No cash. Send a check or money order payable to \"Clerk of the District Court\". The clerk can't give legal advice but can explain local rules.")
         if (clerk != null) {
             ActionRow(Icons.Filled.LocationOn, clerk.name, clerk.address) { openMap(ctx, clerk.mapQuery) }
             ActionRow(Icons.Filled.Phone, "Call the clerk", clerk.phone + " · ask about hours and filing by mail") { dial(ctx, clerk.phone) }
@@ -233,8 +237,9 @@ private fun FileStep(c: CaseData, vm: CaseViewModel) {
 private fun HearingStep(c: CaseData, vm: CaseViewModel) {
     val ctx = LocalContext.current
     val clerk = Court.clerkFor(c.county)
+    if (c.needsSafetyWaiver == true) WaiverDecision(c, vm)
     Dates.parse(c.filedDate)?.let { filed ->
-        Note("Ask for ${Dates.pretty(Deadlines.earliestHearing(filed))} or later.")
+        if (!c.publicationSkipped) Note("Ask for ${Dates.pretty(Deadlines.earliestHearing(filed))} or later.")
     }
     if (clerk != null) Section("Call") { ActionRow(Icons.Filled.Phone, "Call the clerk", clerk.phone + " · \"Who schedules a name change hearing?\"") { dial(ctx, clerk.phone) } }
     Section("Your hearing") {
@@ -336,9 +341,6 @@ private fun HearingDay(c: CaseData, vm: CaseViewModel, onScript: () -> Unit) {
 @Composable
 private fun Copies(c: CaseData, vm: CaseViewModel) {
     val ctx = LocalContext.current
-    Section("Checklist") {
-        CheckRow("Ask the clerk for certified copies of your signed decree", "got_copies" in c.checked) { vm.toggleCheck("got_copies") }
-    }
     Court.clerkFor(c.county)?.let { clerk ->
         Section { ActionRow(Icons.Filled.LocationOn, clerk.name, clerk.address) { openMap(ctx, clerk.mapQuery) } }
     }

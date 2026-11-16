@@ -64,5 +64,6 @@ data class CaseData(
     val currentName get() = listOf(curFirst, curMiddle, curLast).filter { it.isNotBlank() }.joinToString(" ")
     val newName get() = listOf(newFirst, newMiddle, newLast).filter { it.isNotBlank() }.joinToString(" ")
     val cityStateZip get() = listOf(city.trim(), "NE ${zip.trim()}".trim()).filter { it.isNotBlank() && it != "NE" }.joinToString(", ")
+    val waiverPending get() = needsSafetyWaiver == true && waiverResult.isBlank()
     val publicationSkipped get() = needsSafetyWaiver == true && waiverResult == "granted"
 }

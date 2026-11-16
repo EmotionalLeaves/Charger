@@ -78,6 +78,23 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
             }
         }
 
+        // First run: what to expect, in four lines.
+        if (done == 0) {
+            Section("At a glance") {
+                Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(vertical = 4.dp)) {
+                        Guide.glance.forEachIndexed { i, (k, v) ->
+                            if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                                Text(k, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(96.dp))
+                                Text(v, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Dates that matter, only when there are some.
         val upcoming = Deadlines.upcoming(c, today).take(4)
         if (upcoming.isNotEmpty()) {
