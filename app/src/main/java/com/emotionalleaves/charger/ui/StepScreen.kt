@@ -133,11 +133,19 @@ private fun Details(c: CaseData, vm: CaseViewModel) {
         Field("Middle (optional)", c.newMiddle, { v -> vm.update { it.copy(newMiddle = v) } })
         Field("Last", c.newLast, { v -> vm.update { it.copy(newLast = v) } }, hint = "Keeping the same last name? Type it again.")
         if (c.newName.isNotBlank()) Note("Your new name will read: ${c.newName}")
+        Guide.nameWarnings(c).forEach { Note(it, Tone.WARN) }
     }
     Section("Your reason") {
         Field("Why you want to change your name", c.reason, { v -> vm.update { it.copy(reason = v) } },
             caps = KeyboardCapitalization.Sentences, singleLine = false, minLines = 3,
             hint = "Plain and true is best. You'll say this to the judge, so keep it to a sentence or two.")
+        if (c.reason.isBlank()) {
+            Text("Need a start? Tap one, then edit it to fit you.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Guide.exampleReasons.forEach { r ->
+                SuggestionChip(onClick = { vm.update { it.copy(reason = r) } }, label = { Text(r, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 6.dp)) },
+                    modifier = Modifier.fillMaxWidth())
+            }
+        }
     }
     Section("Address and contact") {
         Field("Street address", c.street, { v -> vm.update { it.copy(street = v) } })

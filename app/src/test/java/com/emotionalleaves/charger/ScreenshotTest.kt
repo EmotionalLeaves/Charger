@@ -43,7 +43,7 @@ class ScreenshotTest {
     @Before fun gate() { assumeTrue(System.getProperty("screenshots") == "true") }
 
     private fun shot(name: String, content: @Composable () -> Unit) {
-        rule.setContent { ChargerTheme { content() } }
+        rule.setContent { ChargerTheme { androidx.compose.material3.Surface(color = androidx.compose.material3.MaterialTheme.colorScheme.background) { content() } } }
         rule.onRoot().captureRoboImage("build/shots/$name.png")
     }
 
@@ -63,11 +63,14 @@ class ScreenshotTest {
     @Test fun stepPrepare() = step(StepId.PREPARE, midway)
     @Test fun stepHearingDay() = step(StepId.HEARING_DAY, midway)
     @Test fun stepUpdate() = step(StepId.UPDATE, midway.copy(decreeDate = "2027-01-04"))
+    @Test @Config(qualifiers = "+night") fun homeDark() = shot("02-home-dark") { HomeScreen(midway, {}, {}) }
+    @Test @Config(qualifiers = "+night") fun fileDark() = step(StepId.FILE, midway, "-dark")
+    @Test fun detailsFilled() = step(StepId.DETAILS, midway.copy(newFirst = "rowan", reason = ""), "-filled")
     @Test fun script() = shot("20-script") { ScriptScreen(midway) {} }
     @Test fun about() { val v = vm(midway); shot("21-about") { AboutScreen(v) {} } }
 
-    private fun step(s: StepId, c: CaseData) {
+    private fun step(s: StepId, c: CaseData, suffix: String = "") {
         val v = vm(c)
-        shot("1%02d-step-%s".format(s.ordinal, s.name.lowercase())) { StepScreen(s, c, v, {}, {}, {}) }
+        shot("1%02d-step-%s%s".format(s.ordinal, s.name.lowercase(), suffix)) { StepScreen(s, c, v, {}, {}, {}) }
     }
 }

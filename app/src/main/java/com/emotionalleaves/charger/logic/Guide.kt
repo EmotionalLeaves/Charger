@@ -120,6 +120,24 @@ object Guide {
         "You'll need" to "A printer (or print shop), and one short court hearing",
     )
 
+    /** Starting points for the reason box. Plain, honest, and short is what the court wants. */
+    val exampleReasons = listOf(
+        "I have used this name for years and want my legal name to match.",
+        "This name reflects who I am.",
+        "I want to take a family name.",
+        "My current name is hard to spell and pronounce, and I want a simpler one.",
+        "I want to go back to a name I used before.",
+    )
+
+    /** Gentle checks on how names are typed, since they print exactly as entered. */
+    fun nameWarnings(c: CaseData): List<String> = buildList {
+        val parts = listOf(c.curFirst, c.curMiddle, c.curLast, c.newFirst, c.newMiddle, c.newLast).map { it.trim() }.filter { it.isNotEmpty() }
+        if (parts.any { it.first().isLowerCase() }) add("A name starts with a lowercase letter. Forms print exactly what you type.")
+        if (parts.any { p -> p.length > 2 && p.all { !it.isLetter() || it.isUpperCase() } }) add("A name is in ALL CAPS. Type it the way it should look on your ID.")
+        if (parts.any { p -> p.any { it.isDigit() } }) add("A name contains a number. Double-check it.")
+        if (c.newName.isNotBlank() && c.newName.equals(c.currentName, ignoreCase = true)) add("Your new name is the same as your current name.")
+    }
+
     fun stillNeeded(missing: List<String>): String? = when (missing.size) {
         0 -> null
         1 -> "Still needed: ${missing[0]}"
