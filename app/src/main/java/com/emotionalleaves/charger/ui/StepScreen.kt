@@ -79,7 +79,6 @@ fun StepScreen(step: StepId, c: CaseData, vm: CaseViewModel, onBack: () -> Unit,
                 StepId.PUBLISH -> Publish(c, vm)
                 StepId.PREPARE -> Prepare(c, vm, onScript)
                 StepId.HEARING_DAY -> HearingDay(c, vm, onScript)
-                StepId.COPIES -> Copies(c, vm)
                 StepId.UPDATE -> Update(c, vm)
             }
         }
@@ -207,7 +206,7 @@ private fun FileStep(c: CaseData, vm: CaseViewModel) {
         FormCard(CourtForm.PETITION, c, note = "Print it, then sign and date page 2.")
         FormCard(CourtForm.CONFIDENTIAL, c, note = "Not public. The court may also ask for your Social Security number; write it by hand if the clerk asks.")
         if (Guide.missing(StepId.DETAILS, c).isNotEmpty()) Note("Some details are missing (step 2). The forms will have blanks.", Tone.WARN)
-        Note("No printer? Email the PDFs to a library or print shop, or print at work if allowed.")
+        Note("Print shows your printers, or \"Save as PDF\". No printer? Tap the share icon to email it to a library or print shop.")
     }
     Section("2 · Take them to the clerk") {
         val bring = buildList {
@@ -338,22 +337,20 @@ private fun HearingDay(c: CaseData, vm: CaseViewModel, onScript: () -> Unit) {
     }
 }
 
-@Composable
-private fun Copies(c: CaseData, vm: CaseViewModel) {
-    val ctx = LocalContext.current
-    Court.clerkFor(c.county)?.let { clerk ->
-        Section { ActionRow(Icons.Filled.LocationOn, clerk.name, clerk.address) { openMap(ctx, clerk.mapQuery) } }
-    }
-}
 
 @Composable
 private fun Update(c: CaseData, vm: CaseViewModel) {
+    val ctx = LocalContext.current
+    Section("First: certified copies") {
+        CheckRow("Get ${Guide.recommendedCopies(c)} or more certified copies of your signed decree from the clerk", "got_copies" in c.checked) { vm.toggleCheck("got_copies") }
+        Court.clerkFor(c.county)?.let { clerk -> ActionRow(Icons.Filled.LocationOn, clerk.name, clerk.address) { openMap(ctx, clerk.mapQuery) } }
+    }
     val list = Guide.updateChecklist()
     val n = list.count { it.id in c.checked }
     Dates.parse(c.decreeDate)?.let { d ->
         Note("Driver's license or ID deadline: ${Dates.pretty(d.plusDays(60))} (60 days).", Tone.WARN)
     }
-    Section("$n of ${list.size} updated") {
+    Section("Then: $n of ${list.size} updated") {
         list.forEach { item -> CheckRow(item.text, item.id in c.checked, item.link) { vm.toggleCheck(item.id) } }
     }
 }
@@ -380,20 +377,22 @@ fun FormCard(form: CourtForm, c: CaseData, note: String? = null) {
             if (note != null) Text(note, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
             if (error != null) Text(error!!, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
             Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                fun make(share: Boolean) {
+                fun make(action: (java.io.File) -> Unit) {
                     busy = true; error = null
                     scope.launch {
                         val f = runCatching { withContext(Dispatchers.IO) { PdfFiller.fill(ctx, form, c) } }
                         busy = false
-                        f.onSuccess { if (share) PdfFiller.share(ctx, it) else PdfFiller.open(ctx, it) }
+                        f.onSuccess { runCatching { action(it) }.onFailure { e -> error = "Couldn't open that (${e.message}). Try Send instead." } }
                             .onFailure { error = "Couldn't fill the form (${it.message}). Opening the blank one instead."; runCatching { PdfFiller.open(ctx, PdfFiller.blank(ctx, form)) } }
                     }
                 }
-                Button(onClick = { make(false) }, enabled = !busy, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                    if (busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary) else Text("Open / print")
+                Button(onClick = { make { PdfFiller.print(ctx, it, "Charger ${form.code}") } }, enabled = !busy, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                    if (busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    else Text("Print")
                 }
-                OutlinedButton(onClick = { make(true) }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Icon(Icons.Filled.Share, "Share", Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Send")
+                OutlinedButton(onClick = { make { PdfFiller.open(ctx, it) } }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("View") }
+                OutlinedButton(onClick = { make { PdfFiller.share(ctx, it) } }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Icon(Icons.Filled.Share, "Send", Modifier.size(18.dp))
                 }
             }
         }

@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.emotionalleaves.charger.data.CaseData
@@ -26,6 +28,7 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
     val (done, total) = Guide.progress(c)
     val today = LocalDate.now()
     var showAll by rememberSaveable { mutableStateOf(false) }
+    val ctx = LocalContext.current
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -98,12 +101,13 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
         // Dates that matter, only when there are some.
         val upcoming = Deadlines.upcoming(c, today).take(4)
         if (upcoming.isNotEmpty()) {
-            Section("Coming up") {
+            Section("Coming up · tap to add to calendar") {
                 Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(vertical = 4.dp)) {
                         upcoming.forEachIndexed { i, item ->
                             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.clickable { addToCalendar(ctx, item.title, item.date, if (item.title == "Your hearing") Dates.parseTime(c.hearingTime) else null, if (item.title == "Your hearing") c.courthouseAddress else null, item.detail) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.width(64.dp)) {
                                     Text(item.date.month.name.take(3), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                                     Text("${item.date.dayOfMonth}", style = MaterialTheme.typography.titleLarge)
@@ -113,6 +117,7 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
                                     Text("${Dates.relative(item.date, today).replaceFirstChar { it.uppercase() }} · ${item.detail}",
                                         style = MaterialTheme.typography.bodyMedium, color = if (item.date.isBefore(today)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
+                                Icon(Icons.Filled.DateRange, "Add to calendar", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                             }
                         }
                     }

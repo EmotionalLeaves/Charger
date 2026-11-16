@@ -62,7 +62,6 @@ class ScreenshotTest {
     @Test fun stepPublish() = step(StepId.PUBLISH, midway.copy(hasInterestedParties = true, mailedDate = "2026-12-05"))
     @Test fun stepPrepare() = step(StepId.PREPARE, midway)
     @Test fun stepHearingDay() = step(StepId.HEARING_DAY, midway)
-    @Test fun stepCopies() = step(StepId.COPIES, midway)
     @Test fun stepUpdate() = step(StepId.UPDATE, midway.copy(decreeDate = "2027-01-04"))
     @Test fun script() = shot("20-script") { ScriptScreen(midway) {} }
     @Test fun about() { val v = vm(midway); shot("21-about") { AboutScreen(v) {} } }

@@ -12,7 +12,6 @@ enum class StepId(val title: String, val short: String) {
     PUBLISH("Put the notice in the newspaper", "Newspaper"),
     PREPARE("Get ready for the hearing", "Prepare"),
     HEARING_DAY("Hearing day", "Hearing day"),
-    COPIES("Get certified copies", "Copies"),
     UPDATE("Update your records", "Records"),
 }
 
@@ -56,7 +55,6 @@ object Guide {
         }
         StepId.PREPARE -> prepareChecklist(c).filter { it.id !in c.checked }.map { it.text }
         StepId.HEARING_DAY -> if (Dates.parse(c.decreeDate) == null) listOf("The date the judge signed your decree") else emptyList()
-        StepId.COPIES -> emptyList()
         StepId.UPDATE -> emptyList()
     }
 
@@ -108,13 +106,9 @@ object Guide {
             "When your case is called, say you're ready and would like to testify. You'll take an oath, then read your script.",
             "It usually takes under 10 minutes. You can bring people for support.",
         )
-        StepId.COPIES -> listOf(
-            "Ask the clerk of the district court for certified copies of your signed Decree. Social Security, the DMV and others only accept certified copies, not photocopies.",
-            "Get ${recommendedCopies(c)} or more: some offices keep the copy you give them.",
-        )
         StepId.UPDATE -> listOf(
-            "Do Social Security first. Most other places check against it.",
-            "Your Nebraska driver's license or state ID must be updated within 60 days.",
+            "Agencies only accept certified copies of your decree, not photocopies, and some keep the one you give them. Get copies from the clerk first.",
+            "Then do Social Security. Most other places check against it. Your Nebraska driver's license or ID must be updated within 60 days.",
         )
     }
 
@@ -146,9 +140,9 @@ object Guide {
     fun updateChecklist(): List<ChecklistItem> = listOf(
         ChecklistItem("u_ssa", "Social Security card (free). Do this first.", Link("SSA: change your name", "https://www.ssa.gov/personal-record/change-name")),
         ChecklistItem("u_dmv", "Driver's license or state ID, in person, within 60 days", Link("Nebraska DMV: name change", "https://dmv.nebraska.gov/dl/name-change")),
-        ChecklistItem("u_passport", "Passport (if you have one)", Link("State Dept: change your name", "https://travel.state.gov/content/travel/en/passports/have-passport/change-correct.html")),
-        ChecklistItem("u_birth", "Birth certificate. Born in Nebraska: send a certified decree to DHHS Vital Records (402-471-2872). Born elsewhere: that state's office.", Link("Nebraska DHHS Vital Records", "https://dhhs.ne.gov/Pages/Vital-Records.aspx")),
-        ChecklistItem("u_vote", "Voter registration", Link("Nebraska voter registration", "https://www.nebraska.gov/apps-sos-voter-registration/")),
+        ChecklistItem("u_passport", "Passport, if you have one. Issued less than 1 year ago: Form DS-5504. Older: renew by mail with DS-82. Send a certified decree.", Link("State Dept: change your name", "https://travel.state.gov/namechange")),
+        ChecklistItem("u_birth", "Birth certificate. Born in Nebraska: mail DHHS Vital Records a certified decree and an amendment request (402-471-2871). Born elsewhere: that state's office.", Link("Nebraska DHHS: Vital Records changes", "https://dhhs.ne.gov/Pages/Vital-Records-Changes.aspx")),
+        ChecklistItem("u_vote", "Voter registration. Nebraska requires you to re-register when your name changes. Online works once your license has the new name.", Link("Nebraska Secretary of State", "https://sos.nebraska.gov")),
         ChecklistItem("u_work", "Employer HR and payroll (and your W-4)"),
         ChecklistItem("u_bank", "Bank, cards, and anyone you owe money to"),
         ChecklistItem("u_insurance", "Health, car, and renter's insurance"),

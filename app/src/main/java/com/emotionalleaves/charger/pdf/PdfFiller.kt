@@ -3,6 +3,14 @@ package com.emotionalleaves.charger.pdf
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
+import android.os.CancellationSignal
+import android.os.ParcelFileDescriptor
+import android.print.PageRange
+import android.print.PrintAttributes
+import android.print.PrintDocumentAdapter
+import android.print.PrintDocumentInfo
+import android.print.PrintManager
 import androidx.core.content.FileProvider
 import com.emotionalleaves.charger.data.CaseData
 import com.emotionalleaves.charger.logic.CourtForm
@@ -76,6 +84,24 @@ object PdfFiller {
         val view = Intent(Intent.ACTION_VIEW).setDataAndType(u, "application/pdf")
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         try { ctx.startActivity(view) } catch (e: Exception) { share(ctx, file) }
+    }
+
+    /** Sends the PDF straight to Android's print system (any printer, or "Save as PDF"). */
+    fun print(ctx: Context, file: File, jobName: String) {
+        val pm = ctx.getSystemService(Context.PRINT_SERVICE) as PrintManager
+        val adapter = object : PrintDocumentAdapter() {
+            override fun onLayout(old: PrintAttributes?, new: PrintAttributes?, cancel: CancellationSignal?, cb: LayoutResultCallback, extras: Bundle?) {
+                if (cancel?.isCanceled == true) { cb.onLayoutCancelled(); return }
+                cb.onLayoutFinished(PrintDocumentInfo.Builder(file.name).setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build(), true)
+            }
+            override fun onWrite(pages: Array<out PageRange>?, dest: ParcelFileDescriptor, cancel: CancellationSignal?, cb: WriteResultCallback) {
+                try {
+                    file.inputStream().use { i -> ParcelFileDescriptor.AutoCloseOutputStream(dest).use { o -> i.copyTo(o) } }
+                    cb.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
+                } catch (e: Exception) { cb.onWriteFailed(e.message) }
+            }
+        }
+        pm.print(jobName, adapter, null)
     }
 
     fun share(ctx: Context, file: File) {
