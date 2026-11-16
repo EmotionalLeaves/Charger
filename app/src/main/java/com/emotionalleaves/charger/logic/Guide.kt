@@ -85,7 +85,7 @@ object Guide {
             "If printing it would put you in danger, you can ask the judge to skip it. You'll need proof, like a protection order or police reports. Most people don't qualify.",
         )
         StepId.FILE -> listOf(
-            "Print two forms, sign the petition, and hand them to the clerk of the district court with the fee. The clerk gives you a case number.",
+            "Print two forms, sign the petition, and hand them to the clerk of the district court with the fee. The clerk gives you a case number. Clerks can't give legal advice, but can explain local rules.",
         )
         StepId.HEARING -> listOf(
             "Ask the clerk who schedules name change hearings (often the judge's bailiff), then call them.",
@@ -155,10 +155,10 @@ object Guide {
 
     fun updateChecklist(): List<ChecklistItem> = listOf(
         ChecklistItem("u_ssa", "Social Security card (free). Do this first.", Link("SSA: change your name", "https://www.ssa.gov/personal-record/change-name")),
-        ChecklistItem("u_dmv", "Driver's license or state ID, in person, within 60 days", Link("Nebraska DMV: name change", "https://dmv.nebraska.gov/dl/name-change")),
+        ChecklistItem("u_dmv", "Driver's license or state ID, within 60 days", Link("Nebraska DMV: name change", "https://dmv.nebraska.gov/dl/name-change")),
         ChecklistItem("u_passport", "Passport, if you have one. Issued less than 1 year ago: Form DS-5504. Older: renew by mail with DS-82. Send a certified decree.", Link("State Dept: change your name", "https://travel.state.gov/namechange")),
         ChecklistItem("u_birth", "Birth certificate. Born in Nebraska: mail DHHS Vital Records a certified decree and an amendment request (402-471-2871). Born elsewhere: that state's office.", Link("Nebraska DHHS: Vital Records changes", "https://dhhs.ne.gov/Pages/Vital-Records-Changes.aspx")),
-        ChecklistItem("u_vote", "Voter registration. Nebraska requires you to re-register when your name changes. Online works once your license has the new name.", Link("Nebraska Secretary of State", "https://sos.nebraska.gov")),
+        ChecklistItem("u_vote", "Voter registration. Nebraska requires you to re-register when your name changes, online or with a paper form.", Link("Nebraska Secretary of State", "https://sos.nebraska.gov")),
         ChecklistItem("u_work", "Employer HR and payroll (and your W-4)"),
         ChecklistItem("u_bank", "Bank, cards, and anyone you owe money to"),
         ChecklistItem("u_insurance", "Health, car, and renter's insurance"),

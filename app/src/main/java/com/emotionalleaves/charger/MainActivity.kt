@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                         }
                         route == "script" -> ScriptScreen(c) { route = scriptReturn }
                         route == "about" -> AboutScreen(vm) { route = "home" }
-                        else -> HomeScreen(c, onOpen = { route = it.name }, onAbout = { route = "about" })
+                        else -> HomeScreen(c, onOpen = { route = it.name }, onAbout = { route = "about" }, onScript = { scriptReturn = "home"; route = "script" })
                     }
                 }
             }

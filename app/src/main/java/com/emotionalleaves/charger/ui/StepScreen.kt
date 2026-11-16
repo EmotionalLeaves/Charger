@@ -235,8 +235,7 @@ private fun FileStep(c: CaseData, vm: CaseViewModel) {
             if (c.needsSafetyWaiver == true) add("Waiver request and copies of your proof")
             add("Photo ID")
         }
-        Note("Bring: " + bring.joinToString(" · "))
-        Note("Mailing instead? No cash. Send a check or money order payable to \"Clerk of the District Court\". The clerk can't give legal advice but can explain local rules.")
+        Note("Bring: " + bring.joinToString(" · ") + "\n\nMailing instead? No cash: a check or money order payable to \"Clerk of the District Court\".")
         if (clerk != null) {
             ActionRow(Icons.Filled.LocationOn, clerk.name, clerk.address) { openMap(ctx, clerk.mapQuery) }
             ActionRow(Icons.Filled.Phone, "Call the clerk", clerk.phone + " · ask about hours and filing by mail") { dial(ctx, clerk.phone) }

@@ -19,6 +19,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 
 /** Renders each screen to build/shots for visual review. Run with -Pscreenshots=true. */
 @RunWith(RobolectricTestRunner::class)
@@ -66,6 +70,14 @@ class ScreenshotTest {
     @Test @Config(qualifiers = "+night") fun homeDark() = shot("02-home-dark") { HomeScreen(midway, {}, {}) }
     @Test @Config(qualifiers = "+night") fun fileDark() = step(StepId.FILE, midway, "-dark")
     @Test fun detailsFilled() = step(StepId.DETAILS, midway.copy(newFirst = "rowan", reason = ""), "-filled")
+    @Test @Config(fontScale = 1.5f) fun homeBigText() = shot("03-home-bigtext") { HomeScreen(midway, {}, {}) }
+    @Test @Config(fontScale = 1.5f) fun fileBigText() = step(StepId.FILE, midway, "-bigtext")
+    @Test fun icon() = shot("30-icon") {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.size(192.dp).background(androidx.compose.ui.graphics.Color(0xFF1F3A5F))) {
+            androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(R.drawable.ic_launcher_foreground), null, androidx.compose.ui.Modifier.fillMaxSize())
+        }
+    }
+    @Test fun homeHearingDay() = shot("04-home-hearing-day") { HomeScreen(midway.copy(done = midway.done + "PREPARE"), {}, {}, {}, today = java.time.LocalDate.of(2027, 1, 4)) }
     @Test fun script() = shot("20-script") { ScriptScreen(midway) {} }
     @Test fun about() { val v = vm(midway); shot("21-about") { AboutScreen(v) {} } }
 

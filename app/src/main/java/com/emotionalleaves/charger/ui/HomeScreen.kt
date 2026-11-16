@@ -22,11 +22,10 @@ import com.emotionalleaves.charger.logic.StepId
 import java.time.LocalDate
 
 @Composable
-fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
+fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit, onScript: () -> Unit = {}, today: LocalDate = LocalDate.now()) {
     val steps = Guide.visibleSteps(c)
     val next = Guide.nextStep(c)
     val (done, total) = Guide.progress(c)
-    val today = LocalDate.now()
     var showAll by rememberSaveable { mutableStateOf(false) }
     val ctx = LocalContext.current
 
@@ -54,9 +53,28 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
         )
         Text("$done of $total steps done", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
 
-        // The one thing to do now.
+        // Hearing today or tomorrow: script and directions come first.
+        val hearing = Dates.parse(c.hearingDate)
+        val hearingSoon = hearing != null && c.decreeDate.isBlank() && Dates.daysBetween(today, hearing) in 0L..1L
+        if (hearing != null && hearingSoon) {
+            Spacer(Modifier.height(20.dp))
+            ElevatedCard(Modifier.fillMaxWidth(), colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
+                Column(Modifier.padding(20.dp)) {
+                    Text(if (hearing == today) "YOUR HEARING IS TODAY" else "YOUR HEARING IS TOMORROW", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                    Text(listOfNotNull(Dates.parseTime(c.hearingTime)?.let(Dates::time), c.courtroom.takeIf { it.isNotBlank() }?.let { "Courtroom $it" }).joinToString(" · ").ifBlank { "District Court" },
+                        style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.padding(top = 4.dp))
+                    Text("Arrive 15 minutes early. Bring ID and 2 copies of your decree.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.padding(top = 6.dp))
+                    Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onScript, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("My script") }
+                        if (c.courthouseAddress.isNotBlank()) OutlinedButton(onClick = { openMap(ctx, c.courthouseAddress) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Directions") }
+                    }
+                }
+            }
+        }
+
+        // The one thing to do now (unless the hearing card above already is that).
         Spacer(Modifier.height(20.dp))
-        if (next != null) {
+        if (next != null && !(hearingSoon && next == StepId.HEARING_DAY)) {
             val n = steps.indexOf(next) + 1
             ElevatedCard(onClick = { onOpen(next) }, modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
@@ -71,7 +89,7 @@ fun HomeScreen(c: CaseData, onOpen: (StepId) -> Unit, onAbout: () -> Unit) {
                     }
                 }
             }
-        } else {
+        } else if (next == null) {
             ElevatedCard(Modifier.fillMaxWidth(), colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                 Column(Modifier.padding(20.dp)) {
                     Text("All done", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
